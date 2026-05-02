@@ -3,11 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CNCS - TORNEO GLORIAS NAVALES 2026</title>
+    <title>CNCS - TORNEO ESCALERILLA</title>
+    
+    <!-- Librerías de React y Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- LIBRERÍAS DEL SATÉLITE FIREBASE (V8 COMPATIBLE) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F1F5F9; overflow-x: hidden; }
@@ -25,8 +32,25 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
+        // --- INICIALIZACIÓN DE FIREBASE (EL SATÉLITE) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxVUGkT3YGuMHczsTsusYZhXGW88iCKQE",
+            authDomain: "toreneo-rud-cncs.firebaseapp.com",
+            databaseURL: "https://toreneo-rud-cncs-default-rtdb.firebaseio.com", // Ruta forzada de conexión
+            projectId: "toreneo-rud-cncs",
+            storageBucket: "toreneo-rud-cncs.firebasestorage.app",
+            messagingSenderId: "1041320850078",
+            appId: "1:1041320850078:web:c1565b8099e86f120ac18f",
+            measurementId: "G-BYGYL8J293"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
         // --- CONFIGURACIÓN DEL TORNEO ---
-        const DIAS_TORNEO = ['Sábado 02 de Mayo', 'Domingo 03 de Mayo', 'Sábado 09 de Mayo', 'Domingo 10 de Mayo'];
+        const DIAS_TORNEO = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
         const HORAS = ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
         const CANCHAS = [1, 2, 3, 4, 5];
 
@@ -54,7 +78,6 @@
             "Dobles Mixto": ["Mixto 1", "Mixto 2"]
         };
 
-        // Componente de Llaves
         function BracketNode({ match, roundIndex, matchIndex, totalRounds }) {
             const isFinal = roundIndex === totalRounds - 1;
             const isEven = matchIndex % 2 === 0;
@@ -70,12 +93,12 @@
                     <div className="match-card w-full p-3 rounded-xl shadow-lg z-10 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1">
                             <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j1}</span>
-                            <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[0] || '-'}</span>
+                            <span className="text-[10px] font-mono text-slate-400">{match.score?.split(' ')[0] || '-'}</span>
                         </div>
                         <div className="border-t border-slate-700/50 my-1"></div>
                         <div className="flex justify-between items-center mt-1">
                             <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j2}</span>
-                            <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[1] || '-'}</span>
+                            <span className="text-[10px] font-mono text-slate-400">{match.score?.split(' ')[1] || '-'}</span>
                         </div>
                         {isFinal && <div className="absolute -top-3 -right-3 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.5)]">🏆</div>}
                     </div>
@@ -84,19 +107,29 @@
         }
 
         function App() {
-            const [view, setView] = React.useState('prog'); // prog, llaves, jugadores
-            const [activeDay, setActiveDay] = React.useState(DIAS_TORNEO[0]);
+            const [view, setView] = React.useState('prog'); 
+            const [activeDay, setActiveDay] = React.useState('Sábado');
             const [selectedCat, setSelectedCat] = React.useState(CATEGORIAS[0]);
             
-            // Estado Global de Partidos
-            const [partidos, setPartidos] = React.useState(() => {
-                const guardado = localStorage.getItem('cncs_partidos_full');
-                return guardado ? JSON.parse(guardado) : {};
-            });
+            // Estado Global Conectado a la Nube
+            const [partidos, setPartidos] = React.useState({});
+            const [conexion, setConexion] = React.useState('Conectando...');
 
             React.useEffect(() => {
-                localStorage.setItem('cncs_partidos_full', JSON.stringify(partidos));
-            }, [partidos]);
+                const torneosRef = db.ref('cncs_torneo/partidos');
+                
+                // Escucha en tiempo real
+                torneosRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    setPartidos(data || {});
+                    setConexion('SATÉLITE ACTIVO');
+                }, (error) => {
+                    setConexion('ERROR DE CONEXIÓN');
+                    console.error(error);
+                });
+
+                return () => torneosRef.off();
+            }, []);
 
             const handleAssign = (dia, cancha, hora) => {
                 const catStr = CATEGORIAS.map((c, i) => `${i+1}. ${c}`).join('\n');
@@ -109,20 +142,17 @@
                 const j2 = prompt("Nombre del Desafiado:");
                 if (!j2) return;
 
-                setPartidos(prev => ({ ...prev, [`${dia}_${cancha}_${hora}`]: { j1, j2, cat } }));
+                // Enviar a la nube en lugar de local
+                db.ref(`cncs_torneo/partidos/${dia}_${cancha}_${hora}`).set({ j1, j2, cat });
             };
 
             const clearCancha = (dia, cancha, hora) => {
-                if(confirm("¿Desprogramar este partido?")) {
-                    setPartidos(prev => {
-                        const nuevo = { ...prev };
-                        delete nuevo[`${dia}_${cancha}_${hora}`];
-                        return nuevo;
-                    });
+                if(confirm("¿Desprogramar este partido? Se actualizará para todos los usuarios.")) {
+                    // Borrar de la nube
+                    db.ref(`cncs_torneo/partidos/${dia}_${cancha}_${hora}`).remove();
                 }
             };
 
-            // Simulador de Llaves basado en Jugadores (Generación dinámica)
             const getRoundsForCategory = (cat) => {
                 const players = JUGADORES_BASE[cat] || [];
                 if(players.length === 0) return [];
@@ -168,15 +198,17 @@
                                 <div className="flex justify-between items-end border-b border-slate-800 pb-4">
                                     <div className="flex flex-col gap-2">
                                         <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Selector de Jornada</p>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                                             {DIAS_TORNEO.map(dia => (
-                                                <button key={dia} onClick={() => setActiveDay(dia)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${activeDay === dia ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'border-slate-700 text-slate-400 hover:bg-slate-800'}`}>
+                                                <button key={dia} onClick={() => setActiveDay(dia)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shrink-0 ${activeDay === dia ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'border-slate-700 text-slate-400 hover:bg-slate-800'}`}>
                                                     {dia}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="text-emerald-400 text-[10px] font-bold border border-emerald-500/30 px-3 py-1 rounded-full bg-emerald-500/10">● DASHBOARD ACTIVO</div>
+                                    <div className={`text-[10px] font-bold border px-3 py-1 rounded-full uppercase tracking-widest ${conexion === 'SATÉLITE ACTIVO' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'}`}>
+                                        ● {conexion}
+                                    </div>
                                 </div>
 
                                 <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-2xl">
@@ -273,9 +305,6 @@
                                                     <span className="text-xs font-bold text-slate-300 uppercase">{jugador}</span>
                                                 </div>
                                             ))}
-                                            {(!JUGADORES_BASE[cat] || JUGADORES_BASE[cat].length === 0) && (
-                                                <div className="text-xs text-slate-500 italic py-2">Sin inscritos confirmados...</div>
-                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -284,7 +313,7 @@
                     </div>
 
                     <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 justify-between text-[10px] text-slate-500 font-bold tracking-widest">
-                        <span>SISTEMA TABLERO DE MANDO V1.5</span>
+                        <span>SISTEMA TABLERO DE MANDO V1.6 (CLOUD)</span>
                         <span className="gold-master italic uppercase">Almirante al Mando</span>
                     </div>
                 </div>
