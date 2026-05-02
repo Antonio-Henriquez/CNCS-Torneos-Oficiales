@@ -3,64 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CNCS - Torneos Oficiales</title>
+    <title>CNCS - Centro de Control de Torneos</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root { --navy: #0F172A; --gold: #EAB308; }
-        body { background-color: var(--navy); color: white; font-family: 'Inter', sans-serif; }
-        .gold-border { border: 2px solid var(--gold); }
-        .card-bg { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f1f5f9; overflow: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @media print { .print-hide { display: none !important; } .print-bg { background: white !important; color: black !important; } }
     </style>
 </head>
 <body>
-    <header class="p-6 text-center border-b border-yellow-600/30">
-        <h1 class="text-3xl font-bold text-yellow-500 uppercase tracking-widest">GLORIAS NAVALES 2026</h1>
-        <p class="text-gray-400 mt-2">Club de Campo las Salinas - Centro de Control</p>
-    </header>
+    <div id="root"></div>
 
-    <main class="container mx-auto p-4 space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="stats-container">
-            <div class="card-bg p-6 rounded-xl gold-border text-center">
-                <h3 class="text-yellow-500 font-bold mb-1">SÁBADO 02 MAYO</h3>
-                <p class="text-2xl font-bold">09:00 AM</p>
-                <p class="text-sm text-gray-400">Inicio de Jornada</p>
-            </div>
-            <!-- Aquí aparecerán los datos cargados -->
-        </div>
+    <script type="text/babel">
+        // --- DATA INJECTED FROM SRC/DATA.TS ---
+        const DIAS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const HORAS_BASE = ['09:00', '11:00', '13:00', '15:00', '17:00'];
+        const CAT_COLORS = ['#818CF8', '#34D399', '#A78BFA', '#FBBF24', '#60A5FA'];
+        
+        // --- LOGIC FROM SRC/LIB/BRACKET.TS ---
+        // (Se incluye la lógica simplificada de generación para el despliegue web)
+        function getSeedOrder(size) {
+            if (size === 2) return [1, 2];
+            const prev = getSeedOrder(size / 2);
+            const res = [];
+            for (let i = 0; i < prev.length; i++) {
+                const p = prev[i];
+                if (i % 2 === 0) { res.push(p); res.push(size + 1 - p); }
+                else { res.push(size + 1 - p); res.push(p); }
+            }
+            return res;
+        }
 
-        <div class="bg-slate-900/50 p-6 rounded-2xl gold-border min-h-[400px]">
-            <h2 class="text-xl font-semibold mb-6 border-l-4 border-yellow-500 pl-3">TABLERO DE MANDO Y CONTROL</h2>
-            <div id="bracket-display" class="grid grid-cols-1 gap-8">
-                <!-- Las llaves se generarán automáticamente aquí -->
-            </div>
-        </div>
-    </main>
-
-    <script>
-        // DATOS MAESTROS RECUPERADOS
-        const categorias = {
-            "SINGLES VARORES PRIMERA": ["JAVIER GALVÁN G", "EMILIO GONZALEZ POLZ", "GIANCARLO STAGNO", "JOAQUÍN OLEA"],
-            "SINGLES DAMAS": ["IGNACIA GAJARDO O", "JAVIERA BLANCO", "CLAUDIA TCHIMINO N.", "JULIETA MALANDRE"]
-        };
-
-        const bracketDisplay = document.getElementById('bracket-display');
-        bracketDisplay.innerHTML = ""; // Limpiar el cargando...
-
-        Object.keys(categorias).forEach(cat => {
-            let html = `<div class="p-4 bg-slate-800/50 rounded-lg">
-                <h3 class="text-yellow-500 font-bold mb-4 uppercase border-b border-yellow-500/20 pb-2">${cat}</h3>
-                <div class="flex flex-wrap gap-4">`;
-            
-            categorias[cat].forEach(player => {
-                html += `<div class="bg-slate-700 p-3 rounded-md border-l-4 border-green-500 w-full md:w-48">
-                    <span class="text-xs text-gray-400">Jugador</span>
-                    <p class="font-bold text-sm truncate">${player}</p>
-                </div>`;
+        // --- COMPONENTES PRINCIPALES ---
+        function App() {
+            const [view, setView] = React.useState('prog');
+            const [fechaActiva] = React.useState({ y: 2026, m: 4, d: 2 });
+            const [partidos, setPartidos] = React.useState(() => {
+                const saved = localStorage.getItem('cncs_partidos');
+                return saved ? JSON.parse(saved) : {};
             });
 
-            html += `</div></div>`;
-            bracketDisplay.innerHTML += html;
-        });
+            const dayStr = `${DIAS_FULL[new Date(2026, 4, 2).getDay()]} 02 DE MAYO 2026`;
+
+            return (
+                <div className="h-screen w-full flex flex-col bg-slate-950">
+                    {/* BARRA SUPERIOR */}
+                    <div className="flex items-center px-6 h-14 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
+                        <div className="flex-1 font-bold text-sm tracking-tighter text-slate-100 uppercase">
+                            CNCS CONTROL / RAMA DE TENIS - CLUB DE CAMPO LAS SALINAS
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setView('prog')} className={`px-4 py-1.5 rounded text-[11px] font-bold ${view === 'prog' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>PROGRAMACIÓN</button>
+                            <button onClick={() => setView('llaves')} className={`px-4 py-1.5 rounded text-[11px] font-bold ${view === 'llaves' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>LLAVES</button>
+                        </div>
+                    </div>
+
+                    {/* CONTENIDO PRINCIPAL */}
+                    <div className="flex-1 overflow-hidden p-6">
+                        {view === 'prog' ? (
+                            <div className="h-full flex flex-col gap-4">
+                                <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800">
+                                    <h2 className="text-xl font-light text-white uppercase tracking-tight">{dayStr}</h2>
+                                    <div className="flex gap-2">
+                                        <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">OPERATIVO 95%</div>
+                                    </div>
+                                </div>
+                                <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-2xl overflow-auto p-4">
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr className="text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-800">
+                                                <th className="p-4 text-left">Hora</th>
+                                                {[1,2,3,4,5].map(c => <th key={c} className="p-4">Cancha {c}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {HORAS_BASE.map(h => (
+                                                <tr key={h} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
+                                                    <td className="p-4 font-mono text-sky-400 text-sm font-bold">{h}</td>
+                                                    {[1,2,3,4,5].map(c => (
+                                                        <td key={c} className="p-2">
+                                                            <div className="h-20 border border-dashed border-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-600 uppercase">
+                                                                Libre
+                                                            </div>
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-slate-500 italic">
+                                <i className="lucide-shield-check w-12 h-12 mb-4 opacity-20"></i>
+                                Cargando Motores de Llaves... Seleccione una categoría para visualizar.
+                            </div>
+                        )}
+                    </div>
+
+                    {/* PIE DE PÁGINA */}
+                    <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-6 justify-between text-[10px] text-slate-500 font-mono">
+                        <div>SISTEMA DE MANDO Y CONTROL V1.0</div>
+                        <div className="text-sky-500 uppercase tracking-widest">Almirante al mando</div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
