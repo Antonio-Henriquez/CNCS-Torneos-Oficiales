@@ -13,8 +13,22 @@
         body { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F1F5F9; overflow-x: hidden; }
         .gold-master { color: #EAB308; }
         .bg-navy { background-color: #0F172A; }
-        .match-card { background: #1e293b; border-left: 4px solid #EAB308; transition: all 0.2s; }
-        .match-card:hover { background: #334155; transform: translateY(-2px); }
+        .match-card { background: #1e293b; border-left: 4px solid #EAB308; transition: all 0.2s; position: relative; }
+        .match-card:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+        
+        /* Conectores de Llaves */
+        .connector-right::after {
+            content: ''; position: absolute; right: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569;
+        }
+        .connector-top::before {
+            content: ''; position: absolute; right: -24px; top: 50%; width: 2px; height: 100%; background-color: #475569;
+        }
+        .connector-bottom::before {
+            content: ''; position: absolute; right: -24px; bottom: 50%; width: 2px; height: 100%; background-color: #475569;
+        }
+        .connector-left::after {
+            content: ''; position: absolute; left: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569;
+        }
     </style>
 </head>
 <body>
@@ -23,34 +37,84 @@
         const HORAS = ['09:00', '11:00', '13:00', '15:00', '17:00'];
         const CANCHAS = [1, 2, 3, 4, 5];
 
-        // Partidos pre-cargados (Semilla Inicial)
+        // Semilla Inicial de Programación
         const DATA_INICIAL = {
             "1_09:00": { j1: "JAVIER GALVÁN G.", j2: "EMILIO GONZALEZ POLZ", cat: "SINGLES VARONES HONOR" },
-            "2_09:00": { j1: "GIANCARLO STAGNO", j2: "JOAQUÍN OLEA", cat: "SINGLES VARONES HONOR" },
-            "3_09:00": { j1: "RODRIGO PAVEZ", j2: "ALONSO MARAMBIO", cat: "SINGLES VARONES PRIMERA" },
-            "5_09:00": { j1: "MARTIN BALMELLI", j2: "TOMÁS VILLALOBOS", cat: "SINGLES VARONES PRIMERA" },
-            "1_11:00": { j1: "MAURICIO MUÑOZ D.", j2: "SERGIO CASTILLO", cat: "SINGLES VARONES PRIMERA" },
-            "2_11:00": { j1: "ANTONIO HENRIQUEZ R.", j2: "JAVIER GALVÁN S.", cat: "SINGLES VARONES HONOR" },
-            "3_11:00": { j1: "PABLO RAMÍREZ", j2: "PABLO SAZO C.", cat: "SINGLES VARONES PRIMERA" }
+            "2_09:00": { j1: "GIANCARLO STAGNO", j2: "JOAQUÍN OLEA", cat: "SINGLES VARONES HONOR" }
         };
 
-        function App() {
-            const [view, setView] = React.useState('prog');
+        // Semilla de Cuadros Matemáticos (Llaves)
+        const LLAVES_DATA = {
+            "SINGLES VARONES HONOR": [
+                // Cuartos de Final
+                [
+                    { id: 1, j1: "Giancarlo Stagno", j2: "Torres, F.", score: "6-4 6-2", winner: 1 },
+                    { id: 2, j1: "Herrera, M.", j2: "Gallardo, J.", score: "", winner: null },
+                    { id: 3, j1: "Javier Galván G.", j2: "Emilio Gonzalez", score: "", winner: null },
+                    { id: 4, j1: "Ruiz, C.", j2: "Joaquín Olea", score: "7-5 6-3", winner: 1 }
+                ],
+                // Semifinales
+                [
+                    { id: 5, j1: "Giancarlo Stagno", j2: "Por definir", score: "", winner: null },
+                    { id: 6, j1: "Por definir", j2: "Ruiz, C.", score: "", winner: null }
+                ],
+                // Final
+                [
+                    { id: 7, j1: "Por definir", j2: "Por definir", score: "", winner: null }
+                ]
+            ]
+        };
+
+        const CATEGORIAS = Object.keys(LLAVES_DATA);
+
+        function BracketNode({ match, roundIndex, matchIndex, totalRounds }) {
+            const isFinal = roundIndex === totalRounds - 1;
+            const isEven = matchIndex % 2 === 0;
             
-            // Sistema de Memoria: Carga lo guardado, si no hay nada, usa la Semilla Inicial
+            let connectorClass = "";
+            if (!isFinal) {
+                connectorClass += " connector-right ";
+                connectorClass += isEven ? " connector-top " : " connector-bottom ";
+            }
+            if (roundIndex > 0) {
+                connectorClass += " connector-left ";
+            }
+
+            return (
+                <div className={`w-64 h-24 mb-6 shrink-0 flex items-center relative ${connectorClass}`}>
+                    <div className="match-card w-full p-3 rounded-xl shadow-lg z-10 flex flex-col justify-center">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 1 ? 'text-emerald-400' : 'text-white'}`}>{match.j1}</span>
+                            <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[0] || '-'}</span>
+                        </div>
+                        <div className="border-t border-slate-700/50 my-1"></div>
+                        <div className="flex justify-between items-center mt-1">
+                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 2 ? 'text-emerald-400' : 'text-white'}`}>{match.j2}</span>
+                            <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[1] || '-'}</span>
+                        </div>
+                        {isFinal && (
+                            <div className="absolute -top-3 -right-3 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.5)]">🏆</div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [view, setView] = React.useState('llaves');
+            const [selectedCat, setSelectedCat] = React.useState(CATEGORIAS[0]);
+            
             const [partidos, setPartidos] = React.useState(() => {
                 const guardado = localStorage.getItem('cncs_partidos_oficial');
                 return guardado ? JSON.parse(guardado) : DATA_INICIAL;
             });
 
-            // Guardar en memoria del navegador cada vez que se hace un cambio
             React.useEffect(() => {
                 localStorage.setItem('cncs_partidos_oficial', JSON.stringify(partidos));
             }, [partidos]);
 
-            // Función para programar partido
             const handleAssign = (cancha, hora) => {
-                const cat = prompt("Categoría (ej: Singles Honor):", "Singles Varones");
+                const cat = prompt("Categoría:", selectedCat);
                 if (!cat) return;
                 const j1 = prompt("Nombre del Desafiador:");
                 if (!j1) return;
@@ -60,9 +124,8 @@
                 setPartidos(prev => ({ ...prev, [`${cancha}_${hora}`]: { j1, j2, cat } }));
             };
 
-            // Función para borrar partido
             const clearCancha = (cancha, hora) => {
-                if(confirm("¿Desea desprogramar esta cancha?")) {
+                if(confirm("¿Desprogramar?")) {
                     setPartidos(prev => {
                         const nuevo = { ...prev };
                         delete nuevo[`${cancha}_${hora}`];
@@ -94,7 +157,7 @@
                                 <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Sábado 02 de Mayo</h2>
                                 <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Tablero de Mando y Control de Canchas</p>
                             </div>
-                            <div className="text-emerald-400 text-[10px] font-bold border border-emerald-500/30 px-3 py-1 rounded-full bg-emerald-500/10">● SISTEMA 100% INTERACTIVO</div>
+                            <div className="text-emerald-400 text-[10px] font-bold border border-emerald-500/30 px-3 py-1 rounded-full bg-emerald-500/10">● MÓDULO V1.4 ACTIVO</div>
                         </div>
 
                         {view === 'prog' ? (
@@ -129,7 +192,7 @@
                                                                     </div>
                                                                     <div className="flex gap-2 mt-2">
                                                                         <button className="flex-1 bg-sky-500 text-slate-900 text-[9px] font-black py-1.5 rounded shadow-md uppercase hover:bg-sky-400 transition-colors">🏆 Informar</button>
-                                                                        <button onClick={() => clearCancha(c, h)} className="px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded text-xs font-bold transition-colors" title="Desprogramar Cancha">×</button>
+                                                                        <button onClick={() => clearCancha(c, h)} className="px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded text-xs font-bold transition-colors">×</button>
                                                                     </div>
                                                                 </div>
                                                             ) : (
@@ -146,16 +209,45 @@
                                 </table>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-96 text-slate-600">
-                                <div className="text-4xl mb-4">📈</div>
-                                <h3 className="text-xl font-bold uppercase tracking-widest text-slate-400">Generando Cuadros Matemáticos...</h3>
-                                <p className="text-xs italic mt-2">El motor de llaves está en línea y a la espera de datos.</p>
+                            <div className="flex flex-col gap-6">
+                                <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                                    {CATEGORIAS.map(cat => (
+                                        <button key={cat} onClick={() => setSelectedCat(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all border ${selectedCat === cat ? 'bg-yellow-500 border-yellow-500 text-slate-900' : 'border-slate-700 text-slate-400'}`}>
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                {/* CONTENEDOR DEL BRACKET RENDERER */}
+                                <div className="p-8 overflow-x-auto bg-slate-900/50 border border-slate-800 rounded-3xl shadow-2xl relative min-h-[500px]">
+                                    <div className="flex gap-16 min-w-max">
+                                        {LLAVES_DATA[selectedCat]?.map((round, rIndex, roundsArray) => (
+                                            <div key={rIndex} className="flex flex-col justify-around relative">
+                                                {/* Título de la Ronda */}
+                                                <div className="absolute -top-6 left-0 w-full text-center text-[10px] gold-master font-black uppercase tracking-[0.2em]">
+                                                    {rIndex === roundsArray.length - 1 ? 'Final' : rIndex === roundsArray.length - 2 ? 'Semifinal' : `Ronda ${rIndex + 1}`}
+                                                </div>
+                                                
+                                                {/* Nodos de la Ronda */}
+                                                {round.map((match, mIndex) => (
+                                                    <BracketNode 
+                                                        key={match.id} 
+                                                        match={match} 
+                                                        roundIndex={rIndex} 
+                                                        matchIndex={mIndex} 
+                                                        totalRounds={roundsArray.length} 
+                                                    />
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 justify-between text-[10px] text-slate-500 font-bold tracking-widest">
-                        <span>SISTEMA TABLERO DE MANDO Y CONTROL V1.3</span>
+                        <span>SISTEMA TABLERO DE MANDO Y CONTROL V1.4</span>
                         <span className="gold-master italic uppercase">Desarrollado para CNCS Salinas — Almirante al Mando</span>
                     </div>
                 </div>
