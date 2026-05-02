@@ -4,17 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CNCS - TORNEO ESCALERILLA</title>
-    
-    <!-- Librerías de React y Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- LIBRERÍAS DEL SATÉLITE FIREBASE (V8 COMPATIBLE) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F1F5F9; overflow-x: hidden; }
@@ -32,11 +27,11 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        // --- INICIALIZACIÓN DE FIREBASE (EL SATÉLITE) ---
+        // --- INICIALIZACIÓN DE FIREBASE (SOLO LECTURA) ---
         const firebaseConfig = {
             apiKey: "AIzaSyBxVUGkT3YGuMHczsTsusYZhXGW88iCKQE",
             authDomain: "toreneo-rud-cncs.firebaseapp.com",
-            databaseURL: "https://toreneo-rud-cncs-default-rtdb.firebaseio.com", // Ruta forzada de conexión
+            databaseURL: "https://toreneo-rud-cncs-default-rtdb.firebaseio.com",
             projectId: "toreneo-rud-cncs",
             storageBucket: "toreneo-rud-cncs.firebasestorage.app",
             messagingSenderId: "1041320850078",
@@ -49,33 +44,20 @@
         }
         const db = firebase.database();
 
-        // --- CONFIGURACIÓN DEL TORNEO ---
         const DIAS_TORNEO = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
         const HORAS = ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
         const CANCHAS = [1, 2, 3, 4, 5];
 
         const CATEGORIAS_ICONS = {
-            "Singles Honor": "🏆",
-            "Singles Varones Primera": "🥇",
-            "Singles Varones Segunda": "🥈",
-            "Singles Varones +70": "🏅",
-            "Singles Damas": "👑",
-            "Dobles Varones Primera": "👥",
-            "Dobles Varones Segunda": "👥",
-            "Dobles Mixto": "👫"
+            "Singles Honor": "🏆", "Singles Varones Primera": "🥇", "Singles Varones Segunda": "🥈",
+            "Singles Varones +70": "🏅", "Singles Damas": "👑", "Dobles Varones Primera": "👥",
+            "Dobles Varones Segunda": "👥", "Dobles Mixto": "👫"
         };
-
         const CATEGORIAS = Object.keys(CATEGORIAS_ICONS);
 
         const JUGADORES_BASE = {
             "Singles Honor": ["Giancarlo Stagno", "Bendel, R.", "Torres, F.", "Herrera, M.", "Javier Galván G.", "Ruiz, C.", "Joaquín Olea", "Emilio Gonzalez"],
-            "Singles Varones Primera": ["García, R.", "Marcos, F.", "Rodrigo Pavez", "Alonso Marambio", "Martin Balmelli", "Tomás Villalobos", "Mauricio Muñoz D.", "Sergio Castillo", "Pablo Ramírez", "Pablo Sazo C."],
-            "Singles Varones Segunda": ["Jugador 2A", "Jugador 2B", "Jugador 2C", "Jugador 2D"],
-            "Singles Damas": ["Rosemarie B.", "Javiera Blanco", "González, M.", "Parra, C."],
-            "Singles Varones +70": ["Veterano 1", "Veterano 2", "Veterano 3", "Veterano 4"],
-            "Dobles Varones Primera": ["Pareja 1A", "Pareja 1B", "Pareja 1C", "Pareja 1D"],
-            "Dobles Varones Segunda": ["Pareja 2A", "Pareja 2B"],
-            "Dobles Mixto": ["Mixto 1", "Mixto 2"]
+            "Singles Varones Primera": ["García, R.", "Marcos, F.", "Rodrigo Pavez", "Alonso Marambio", "Martin Balmelli", "Tomás Villalobos", "Mauricio Muñoz D.", "Sergio Castillo", "Pablo Ramírez", "Pablo Sazo C."]
         };
 
         function BracketNode({ match, roundIndex, matchIndex, totalRounds }) {
@@ -92,12 +74,12 @@
                 <div className={`w-64 h-24 mb-6 shrink-0 flex items-center relative ${connectorClass}`}>
                     <div className="match-card w-full p-3 rounded-xl shadow-lg z-10 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1">
-                            <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j1}</span>
+                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 1 ? 'text-emerald-400' : 'text-white'}`}>{match.j1}</span>
                             <span className="text-[10px] font-mono text-slate-400">{match.score?.split(' ')[0] || '-'}</span>
                         </div>
                         <div className="border-t border-slate-700/50 my-1"></div>
                         <div className="flex justify-between items-center mt-1">
-                            <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j2}</span>
+                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 2 ? 'text-emerald-400' : 'text-white'}`}>{match.j2}</span>
                             <span className="text-[10px] font-mono text-slate-400">{match.score?.split(' ')[1] || '-'}</span>
                         </div>
                         {isFinal && <div className="absolute -top-3 -right-3 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.5)]">🏆</div>}
@@ -110,71 +92,41 @@
             const [view, setView] = React.useState('prog'); 
             const [activeDay, setActiveDay] = React.useState('Sábado');
             const [selectedCat, setSelectedCat] = React.useState(CATEGORIAS[0]);
-            
-            // Estado Global Conectado a la Nube
             const [partidos, setPartidos] = React.useState({});
+            const [llavesData, setLlavesData] = React.useState({});
             const [conexion, setConexion] = React.useState('Conectando...');
 
             React.useEffect(() => {
-                const torneosRef = db.ref('cncs_torneo/partidos');
-                
-                // Escucha en tiempo real
-                torneosRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    setPartidos(data || {});
-                    setConexion('SATÉLITE ACTIVO');
-                }, (error) => {
-                    setConexion('ERROR DE CONEXIÓN');
-                    console.error(error);
+                // Escucha de Partidos Programados
+                const partidosRef = db.ref('cncs_torneo/partidos');
+                partidosRef.on('value', (snapshot) => {
+                    setPartidos(snapshot.val() || {});
+                    setConexion('EN VIVO');
+                }, () => setConexion('DESCONECTADO'));
+
+                // Escucha de Llaves y Resultados
+                const llavesRef = db.ref('cncs_torneo/llaves');
+                llavesRef.on('value', (snapshot) => {
+                    setLlavesData(snapshot.val() || {});
                 });
 
-                return () => torneosRef.off();
+                return () => { partidosRef.off(); llavesRef.off(); };
             }, []);
 
-            const handleAssign = (dia, cancha, hora) => {
-                const catStr = CATEGORIAS.map((c, i) => `${i+1}. ${c}`).join('\n');
-                const catIdx = prompt(`Seleccione número de Categoría:\n${catStr}`, "1");
-                if (!catIdx || !CATEGORIAS[catIdx-1]) return;
-                
-                const cat = CATEGORIAS[catIdx-1];
-                const j1 = prompt("Nombre del Desafiador:");
-                if (!j1) return;
-                const j2 = prompt("Nombre del Desafiado:");
-                if (!j2) return;
-
-                // Enviar a la nube en lugar de local
-                db.ref(`cncs_torneo/partidos/${dia}_${cancha}_${hora}`).set({ j1, j2, cat });
-            };
-
-            const clearCancha = (dia, cancha, hora) => {
-                if(confirm("¿Desprogramar este partido? Se actualizará para todos los usuarios.")) {
-                    // Borrar de la nube
-                    db.ref(`cncs_torneo/partidos/${dia}_${cancha}_${hora}`).remove();
-                }
-            };
-
             const getRoundsForCategory = (cat) => {
-                const players = JUGADORES_BASE[cat] || [];
-                if(players.length === 0) return [];
-                
+                // Si hay datos en la nube para esta llave, los usa. Si no, genera el cuadro vacío base.
+                if(llavesData[cat]) return llavesData[cat];
+
+                const players = JUGADORES_BASE[cat] || ["Por definir", "Por definir", "Por definir", "Por definir"];
                 const qf = [];
-                for(let i=0; i<players.length; i+=2) {
-                    qf.push({ id: `qf_${i}`, j1: players[i], j2: players[i+1] || "BYE", score: "", winner: null });
-                }
-                const sf = [];
-                for(let i=0; i<qf.length; i+=2) {
-                    sf.push({ id: `sf_${i}`, j1: "Por definir", j2: "Por definir", score: "", winner: null });
-                }
+                for(let i=0; i<players.length; i+=2) qf.push({ id: `qf_${i}`, j1: players[i], j2: players[i+1] || "BYE", score: "", winner: null });
+                const sf = [{ id: "sf_0", j1: "Por definir", j2: "Por definir", score: "", winner: null }, { id: "sf_1", j1: "Por definir", j2: "Por definir", score: "", winner: null }];
                 const final = [{ id: "final", j1: "Por definir", j2: "Por definir", score: "", winner: null }];
-                
-                if (qf.length <= 1) return [qf];
-                if (qf.length <= 2) return [qf, final];
                 return [qf, sf, final];
             };
 
             return (
                 <div className="min-h-screen w-full flex flex-col bg-navy">
-                    {/* BARRA SUPERIOR (NAVY & GOLD) */}
                     <div className="flex items-center px-6 h-16 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
                         <div className="flex items-center gap-3 flex-1">
                             <div className="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center text-slate-900 shadow-lg font-bold">🏆</div>
@@ -186,18 +138,15 @@
                         <div className="flex gap-2 bg-slate-800 p-1 rounded-lg">
                             <button onClick={() => setView('prog')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'prog' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>PROGRAMACIÓN</button>
                             <button onClick={() => setView('llaves')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'llaves' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>LLAVES</button>
-                            <button onClick={() => setView('jugadores')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'jugadores' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>JUGADORES</button>
                         </div>
                     </div>
 
                     <div className="flex-1 p-6 overflow-auto">
-                        
-                        {/* PESTAÑA: PROGRAMACIÓN */}
                         {view === 'prog' && (
                             <div className="flex flex-col h-full gap-4">
                                 <div className="flex justify-between items-end border-b border-slate-800 pb-4">
                                     <div className="flex flex-col gap-2">
-                                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Selector de Jornada</p>
+                                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Jornadas Disponibles</p>
                                         <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                                             {DIAS_TORNEO.map(dia => (
                                                 <button key={dia} onClick={() => setActiveDay(dia)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border shrink-0 ${activeDay === dia ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'border-slate-700 text-slate-400 hover:bg-slate-800'}`}>
@@ -206,8 +155,9 @@
                                             ))}
                                         </div>
                                     </div>
-                                    <div className={`text-[10px] font-bold border px-3 py-1 rounded-full uppercase tracking-widest ${conexion === 'SATÉLITE ACTIVO' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'}`}>
-                                        ● {conexion}
+                                    <div className={`flex items-center gap-2 text-[10px] font-bold border px-3 py-1 rounded-full uppercase tracking-widest ${conexion === 'EN VIVO' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>
+                                        <span className={`w-2 h-2 rounded-full ${conexion === 'EN VIVO' ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}></span>
+                                        {conexion}
                                     </div>
                                 </div>
 
@@ -216,11 +166,7 @@
                                         <thead className="bg-slate-900/90">
                                             <tr>
                                                 <th className="p-4 text-left border-r border-slate-800 text-[10px] gold-master font-black w-24">HORA</th>
-                                                {CANCHAS.map(c => (
-                                                    <th key={c} className="p-4 border-r border-slate-800 last:border-0 text-center w-64 min-w-[220px]">
-                                                        <div className="text-white text-sm font-bold">Cancha {c}</div>
-                                                    </th>
-                                                ))}
+                                                {CANCHAS.map(c => <th key={c} className="p-4 border-r border-slate-800 last:border-0 text-center w-64 min-w-[220px]"><div className="text-white text-sm font-bold">Cancha {c}</div></th>)}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -232,22 +178,16 @@
                                                         return (
                                                             <td key={c} className="p-2 border-r border-slate-800 last:border-0 h-32">
                                                                 {p ? (
-                                                                    <div className="match-card p-3 rounded-xl h-full flex flex-col justify-between shadow-lg relative group">
-                                                                        <div>
-                                                                            <p className="text-[8px] gold-master font-black mb-1 truncate uppercase tracking-tighter">{CATEGORIAS_ICONS[p.cat]} {p.cat}</p>
-                                                                            <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j1}</p>
-                                                                            <p className="text-[9px] text-slate-500 my-0.5 font-bold italic">vs</p>
-                                                                            <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j2}</p>
-                                                                        </div>
-                                                                        <div className="flex gap-2 mt-2">
-                                                                            <button className="flex-1 bg-sky-500 text-slate-900 text-[9px] font-black py-1.5 rounded shadow-md uppercase">🏆 Informar</button>
-                                                                            <button onClick={() => clearCancha(activeDay, c, h)} className="px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded text-xs font-bold">×</button>
-                                                                        </div>
+                                                                    <div className="match-card p-3 rounded-xl h-full flex flex-col justify-center shadow-lg relative">
+                                                                        <p className="text-[8px] gold-master font-black mb-2 truncate uppercase tracking-tighter">{CATEGORIAS_ICONS[p.cat] || '🎾'} {p.cat}</p>
+                                                                        <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j1}</p>
+                                                                        <p className="text-[9px] text-slate-500 my-1 font-bold italic">vs</p>
+                                                                        <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j2}</p>
                                                                     </div>
                                                                 ) : (
-                                                                    <button onClick={() => handleAssign(activeDay, c, h)} className="h-full w-full border border-dashed border-slate-700/50 rounded-xl flex items-center justify-center opacity-40 hover:opacity-100 hover:border-yellow-500 hover:text-yellow-500 transition-all cursor-pointer">
-                                                                        <span className="text-[10px] font-black uppercase tracking-widest">+ Programar</span>
-                                                                    </button>
+                                                                    <div className="h-full w-full border border-dashed border-slate-800 rounded-xl flex items-center justify-center opacity-30">
+                                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Sin programación</span>
+                                                                    </div>
                                                                 )}
                                                             </td>
                                                         );
@@ -260,18 +200,16 @@
                             </div>
                         )}
 
-                        {/* PESTAÑA: LLAVES */}
                         {view === 'llaves' && (
                             <div className="flex flex-col gap-6 h-full">
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {CATEGORIAS.map(cat => (
                                         <button key={cat} onClick={() => setSelectedCat(cat)} className={`p-3 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border ${selectedCat === cat ? 'bg-yellow-500 border-yellow-500 text-slate-900 shadow-lg scale-[1.02]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}>
-                                            <span className="text-xl">{CATEGORIAS_ICONS[cat]}</span>
+                                            <span className="text-xl">{CATEGORIAS_ICONS[cat] || '🎾'}</span>
                                             <span className="text-left leading-tight">{cat}</span>
                                         </button>
                                     ))}
                                 </div>
-                                
                                 <div className="p-8 overflow-x-auto bg-slate-900/50 border border-slate-800 rounded-3xl shadow-2xl relative min-h-[500px]">
                                     <div className="flex gap-16 min-w-max">
                                         {getRoundsForCategory(selectedCat).map((round, rIndex, roundsArray) => (
@@ -279,42 +217,13 @@
                                                 <div className="absolute -top-6 left-0 w-full text-center text-[10px] gold-master font-black uppercase tracking-[0.2em]">
                                                     {rIndex === roundsArray.length - 1 ? 'Final' : rIndex === 0 && roundsArray.length > 2 ? 'Cuartos' : 'Semifinal'}
                                                 </div>
-                                                {round.map((match, mIndex) => (
-                                                    <BracketNode key={match.id} match={match} roundIndex={rIndex} matchIndex={mIndex} totalRounds={roundsArray.length} />
-                                                ))}
+                                                {round.map((match, mIndex) => <BracketNode key={match.id} match={match} roundIndex={rIndex} matchIndex={mIndex} totalRounds={roundsArray.length} />)}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             </div>
                         )}
-
-                        {/* PESTAÑA: JUGADORES */}
-                        {view === 'jugadores' && (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {CATEGORIAS.map(cat => (
-                                    <div key={cat} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mb-3">
-                                            <span className="text-2xl">{CATEGORIAS_ICONS[cat]}</span>
-                                            <h3 className="font-black text-white uppercase text-sm">{cat}</h3>
-                                        </div>
-                                        <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
-                                            {JUGADORES_BASE[cat]?.map((jugador, i) => (
-                                                <div key={i} className="flex items-center gap-2 py-1.5 border-b border-slate-800/50 last:border-0">
-                                                    <span className="text-[10px] font-mono text-slate-500 w-4">{i+1}.</span>
-                                                    <span className="text-xs font-bold text-slate-300 uppercase">{jugador}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 justify-between text-[10px] text-slate-500 font-bold tracking-widest">
-                        <span>SISTEMA TABLERO DE MANDO V1.6 (CLOUD)</span>
-                        <span className="gold-master italic uppercase">Almirante al Mando</span>
                     </div>
                 </div>
             );
