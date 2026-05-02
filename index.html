@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNCS - Torneos Oficiales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --navy: #0F172A; --gold: #EAB308; }
+        body { background-color: var(--navy); color: white; font-family: 'Inter', sans-serif; }
+        .gold-border { border: 2px solid var(--gold); }
+        .card-bg { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body>
+    <!-- TABLERO DE MANDO Y CONTROL -->
+    <header class="p-6 text-center border-b border-yellow-600/30">
+        <h1 class="text-3xl font-bold text-yellow-500 uppercase tracking-widest">Glorias Navales 2026</h1>
+        <p class="text-gray-400 mt-2">Club de Campo las Salinas - Centro de Control</p>
+    </header>
+
+    <main class="container mx-auto p-4 space-y-6">
+        <!-- SECCIÓN DE DATOS REALES RESCATADOS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="card-bg p-6 rounded-xl gold-border text-center">
+                <h3 class="text-yellow-500 font-bold mb-2">SÁBADO 02 MAYO</h3>
+                <p class="text-2xl font-bold">09:00 AM</p>
+                <p class="text-sm text-gray-300 mt-2">Inicio de Jornada</p>
+            </div>
+            <!-- Los datos de cncs_partidos y cncs_categorias se cargan dinámicamente aquí -->
+        </div>
+
+        <div id="bracket-container" class="bg-slate-900/50 p-6 rounded-2xl min-h-[400px]">
+            <h2 class="text-xl font-semibold mb-4 border-l-4 border-yellow-500 pl-3">LLAVES Y PUNTAJES EN VIVO</h2>
+            <div class="flex justify-center items-center h-full text-gray-500 italic">
+                Cargando inteligencia del torneo...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CARGAMENTO DE DATOS RECUPERADOS (localStorage bridge)
+        const categorias = {
+            "SINGLES VARORES PRIMERA": { type: "double elimination", players: ["JAVIER GALVÁN G", "EMILIO GONZALEZ POLZ", "GIANCARLO STAGNO", "JOAQUÍN OLEA"] },
+            "SINGLES DAMAS": { type: "double elimination", players: ["IGNACIA GAJARDO O", "JAVIERA BLANCO", "CLAUDIA TCHIMINO N.", "JULIETA MALANDRE"] }
+        };
+
+        const partidos = {
+            "2026-4-2_1_09:00": { cat: "SINGLES VARORES PRIMERA", j1: "JAVIER GALVÁN G", j2: "EMILIO GONZALEZ POLZ", ronda: "Ronda 1" },
+            "2026-4-2_2_09:00": { cat: "SINGLES VARORES PRIMERA", j1: "GIANCARLO STAGNO", j2: "JOAQUÍN OLEA", ronda: "Ronda 1" }
+        };
+
+        console.log("⚓ Sistema CNCS-Torneos-Oficiales Iniciado");
+        // Aquí se inyecta la lógica de sincronización automática que discutimos
+    </script>
+</body>
+</html>
