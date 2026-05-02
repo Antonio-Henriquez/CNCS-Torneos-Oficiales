@@ -15,228 +15,240 @@
         .bg-navy { background-color: #0F172A; }
         .match-card { background: #1e293b; border-left: 4px solid #EAB308; transition: all 0.2s; position: relative; }
         .match-card:hover { background: #334155; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
-        
-        /* Conectores de Llaves */
-        .connector-right::after {
-            content: ''; position: absolute; right: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569;
-        }
-        .connector-top::before {
-            content: ''; position: absolute; right: -24px; top: 50%; width: 2px; height: 100%; background-color: #475569;
-        }
-        .connector-bottom::before {
-            content: ''; position: absolute; right: -24px; bottom: 50%; width: 2px; height: 100%; background-color: #475569;
-        }
-        .connector-left::after {
-            content: ''; position: absolute; left: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .connector-right::after { content: ''; position: absolute; right: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569; }
+        .connector-top::before { content: ''; position: absolute; right: -24px; top: 50%; width: 2px; height: 100%; background-color: #475569; }
+        .connector-bottom::before { content: ''; position: absolute; right: -24px; bottom: 50%; width: 2px; height: 100%; background-color: #475569; }
+        .connector-left::after { content: ''; position: absolute; left: -24px; top: 50%; width: 24px; height: 2px; background-color: #475569; }
     </style>
 </head>
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const HORAS = ['09:00', '11:00', '13:00', '15:00', '17:00'];
+        // --- CONFIGURACIÓN DEL TORNEO ---
+        const DIAS_TORNEO = ['Sábado 02 de Mayo', 'Domingo 03 de Mayo', 'Sábado 09 de Mayo', 'Domingo 10 de Mayo'];
+        const HORAS = ['09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
         const CANCHAS = [1, 2, 3, 4, 5];
 
-        // Semilla Inicial de Programación
-        const DATA_INICIAL = {
-            "1_09:00": { j1: "JAVIER GALVÁN G.", j2: "EMILIO GONZALEZ POLZ", cat: "SINGLES VARONES HONOR" },
-            "2_09:00": { j1: "GIANCARLO STAGNO", j2: "JOAQUÍN OLEA", cat: "SINGLES VARONES HONOR" }
+        const CATEGORIAS_ICONS = {
+            "Singles Honor": "🏆",
+            "Singles Varones Primera": "🥇",
+            "Singles Varones Segunda": "🥈",
+            "Singles Varones +70": "🏅",
+            "Singles Damas": "👑",
+            "Dobles Varones Primera": "👥",
+            "Dobles Varones Segunda": "👥",
+            "Dobles Mixto": "👫"
         };
 
-        // Semilla de Cuadros Matemáticos (Llaves)
-        const LLAVES_DATA = {
-            "SINGLES VARONES HONOR": [
-                // Cuartos de Final
-                [
-                    { id: 1, j1: "Giancarlo Stagno", j2: "Torres, F.", score: "6-4 6-2", winner: 1 },
-                    { id: 2, j1: "Herrera, M.", j2: "Gallardo, J.", score: "", winner: null },
-                    { id: 3, j1: "Javier Galván G.", j2: "Emilio Gonzalez", score: "", winner: null },
-                    { id: 4, j1: "Ruiz, C.", j2: "Joaquín Olea", score: "7-5 6-3", winner: 1 }
-                ],
-                // Semifinales
-                [
-                    { id: 5, j1: "Giancarlo Stagno", j2: "Por definir", score: "", winner: null },
-                    { id: 6, j1: "Por definir", j2: "Ruiz, C.", score: "", winner: null }
-                ],
-                // Final
-                [
-                    { id: 7, j1: "Por definir", j2: "Por definir", score: "", winner: null }
-                ]
-            ]
+        const CATEGORIAS = Object.keys(CATEGORIAS_ICONS);
+
+        const JUGADORES_BASE = {
+            "Singles Honor": ["Giancarlo Stagno", "Bendel, R.", "Torres, F.", "Herrera, M.", "Javier Galván G.", "Ruiz, C.", "Joaquín Olea", "Emilio Gonzalez"],
+            "Singles Varones Primera": ["García, R.", "Marcos, F.", "Rodrigo Pavez", "Alonso Marambio", "Martin Balmelli", "Tomás Villalobos", "Mauricio Muñoz D.", "Sergio Castillo", "Pablo Ramírez", "Pablo Sazo C."],
+            "Singles Varones Segunda": ["Jugador 2A", "Jugador 2B", "Jugador 2C", "Jugador 2D"],
+            "Singles Damas": ["Rosemarie B.", "Javiera Blanco", "González, M.", "Parra, C."],
+            "Singles Varones +70": ["Veterano 1", "Veterano 2", "Veterano 3", "Veterano 4"],
+            "Dobles Varones Primera": ["Pareja 1A", "Pareja 1B", "Pareja 1C", "Pareja 1D"],
+            "Dobles Varones Segunda": ["Pareja 2A", "Pareja 2B"],
+            "Dobles Mixto": ["Mixto 1", "Mixto 2"]
         };
 
-        const CATEGORIAS = Object.keys(LLAVES_DATA);
-
+        // Componente de Llaves
         function BracketNode({ match, roundIndex, matchIndex, totalRounds }) {
             const isFinal = roundIndex === totalRounds - 1;
             const isEven = matchIndex % 2 === 0;
-            
             let connectorClass = "";
             if (!isFinal) {
                 connectorClass += " connector-right ";
                 connectorClass += isEven ? " connector-top " : " connector-bottom ";
             }
-            if (roundIndex > 0) {
-                connectorClass += " connector-left ";
-            }
+            if (roundIndex > 0) connectorClass += " connector-left ";
 
             return (
                 <div className={`w-64 h-24 mb-6 shrink-0 flex items-center relative ${connectorClass}`}>
                     <div className="match-card w-full p-3 rounded-xl shadow-lg z-10 flex flex-col justify-center">
                         <div className="flex justify-between items-center mb-1">
-                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 1 ? 'text-emerald-400' : 'text-white'}`}>{match.j1}</span>
+                            <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j1}</span>
                             <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[0] || '-'}</span>
                         </div>
                         <div className="border-t border-slate-700/50 my-1"></div>
                         <div className="flex justify-between items-center mt-1">
-                            <span className={`text-[11px] font-extrabold uppercase truncate ${match.winner === 2 ? 'text-emerald-400' : 'text-white'}`}>{match.j2}</span>
+                            <span className="text-[11px] font-extrabold uppercase truncate text-white">{match.j2}</span>
                             <span className="text-[10px] font-mono text-slate-400">{match.score.split(' ')[1] || '-'}</span>
                         </div>
-                        {isFinal && (
-                            <div className="absolute -top-3 -right-3 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.5)]">🏆</div>
-                        )}
+                        {isFinal && <div className="absolute -top-3 -right-3 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.5)]">🏆</div>}
                     </div>
                 </div>
             );
         }
 
         function App() {
-            const [view, setView] = React.useState('llaves');
+            const [view, setView] = React.useState('prog'); // prog, llaves, jugadores
+            const [activeDay, setActiveDay] = React.useState(DIAS_TORNEO[0]);
             const [selectedCat, setSelectedCat] = React.useState(CATEGORIAS[0]);
             
+            // Estado Global de Partidos
             const [partidos, setPartidos] = React.useState(() => {
-                const guardado = localStorage.getItem('cncs_partidos_oficial');
-                return guardado ? JSON.parse(guardado) : DATA_INICIAL;
+                const guardado = localStorage.getItem('cncs_partidos_full');
+                return guardado ? JSON.parse(guardado) : {};
             });
 
             React.useEffect(() => {
-                localStorage.setItem('cncs_partidos_oficial', JSON.stringify(partidos));
+                localStorage.setItem('cncs_partidos_full', JSON.stringify(partidos));
             }, [partidos]);
 
-            const handleAssign = (cancha, hora) => {
-                const cat = prompt("Categoría:", selectedCat);
-                if (!cat) return;
+            const handleAssign = (dia, cancha, hora) => {
+                const catStr = CATEGORIAS.map((c, i) => `${i+1}. ${c}`).join('\n');
+                const catIdx = prompt(`Seleccione número de Categoría:\n${catStr}`, "1");
+                if (!catIdx || !CATEGORIAS[catIdx-1]) return;
+                
+                const cat = CATEGORIAS[catIdx-1];
                 const j1 = prompt("Nombre del Desafiador:");
                 if (!j1) return;
                 const j2 = prompt("Nombre del Desafiado:");
                 if (!j2) return;
 
-                setPartidos(prev => ({ ...prev, [`${cancha}_${hora}`]: { j1, j2, cat } }));
+                setPartidos(prev => ({ ...prev, [`${dia}_${cancha}_${hora}`]: { j1, j2, cat } }));
             };
 
-            const clearCancha = (cancha, hora) => {
-                if(confirm("¿Desprogramar?")) {
+            const clearCancha = (dia, cancha, hora) => {
+                if(confirm("¿Desprogramar este partido?")) {
                     setPartidos(prev => {
                         const nuevo = { ...prev };
-                        delete nuevo[`${cancha}_${hora}`];
+                        delete nuevo[`${dia}_${cancha}_${hora}`];
                         return nuevo;
                     });
                 }
             };
 
+            // Simulador de Llaves basado en Jugadores (Generación dinámica)
+            const getRoundsForCategory = (cat) => {
+                const players = JUGADORES_BASE[cat] || [];
+                if(players.length === 0) return [];
+                
+                const qf = [];
+                for(let i=0; i<players.length; i+=2) {
+                    qf.push({ id: `qf_${i}`, j1: players[i], j2: players[i+1] || "BYE", score: "", winner: null });
+                }
+                const sf = [];
+                for(let i=0; i<qf.length; i+=2) {
+                    sf.push({ id: `sf_${i}`, j1: "Por definir", j2: "Por definir", score: "", winner: null });
+                }
+                const final = [{ id: "final", j1: "Por definir", j2: "Por definir", score: "", winner: null }];
+                
+                if (qf.length <= 1) return [qf];
+                if (qf.length <= 2) return [qf, final];
+                return [qf, sf, final];
+            };
+
             return (
                 <div className="min-h-screen w-full flex flex-col bg-navy">
-                    {/* BARRA SUPERIOR ESTATAL */}
+                    {/* BARRA SUPERIOR (NAVY & GOLD) */}
                     <div className="flex items-center px-6 h-16 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
                         <div className="flex items-center gap-3 flex-1">
                             <div className="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center text-slate-900 shadow-lg font-bold">🏆</div>
                             <div className="flex flex-col">
                                 <span className="text-[10px] gold-master font-black tracking-widest leading-none mb-1 uppercase">Club de Campo Las Salinas</span>
-                                <h1 className="font-extrabold text-lg text-white uppercase italic leading-none">TORNEO <span className="gold-master">GLORIAS NAVALES 2026</span></h1>
+                                <h1 className="font-extrabold text-lg text-white uppercase italic leading-none">TORNEO <span className="gold-master">ESCALERILLA CNCS</span></h1>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setView('prog')} className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${view === 'prog' ? 'bg-yellow-500 text-slate-900' : 'text-slate-400 border border-slate-700 hover:bg-slate-800'}`}>PROGRAMACIÓN</button>
-                            <button onClick={() => setView('llaves')} className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${view === 'llaves' ? 'bg-yellow-500 text-slate-900' : 'text-slate-400 border border-slate-700 hover:bg-slate-800'}`}>LLAVES</button>
+                        <div className="flex gap-2 bg-slate-800 p-1 rounded-lg">
+                            <button onClick={() => setView('prog')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'prog' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>PROGRAMACIÓN</button>
+                            <button onClick={() => setView('llaves')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'llaves' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>LLAVES</button>
+                            <button onClick={() => setView('jugadores')} className={`px-4 py-1.5 rounded text-xs font-black transition-all ${view === 'jugadores' ? 'bg-yellow-500 text-slate-900 shadow' : 'text-slate-400 hover:text-white'}`}>JUGADORES</button>
                         </div>
                     </div>
 
                     <div className="flex-1 p-6 overflow-auto">
-                        <div className="mb-6 flex justify-between items-end border-b border-slate-800 pb-4">
-                            <div>
-                                <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Sábado 02 de Mayo</h2>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Tablero de Mando y Control de Canchas</p>
-                            </div>
-                            <div className="text-emerald-400 text-[10px] font-bold border border-emerald-500/30 px-3 py-1 rounded-full bg-emerald-500/10">● MÓDULO V1.4 ACTIVO</div>
-                        </div>
-
-                        {view === 'prog' ? (
-                            <div className="overflow-x-auto rounded-3xl border border-slate-800 shadow-2xl">
-                                <table className="w-full border-collapse">
-                                    <thead className="bg-slate-900/90">
-                                        <tr>
-                                            <th className="p-4 text-left border-r border-slate-800 text-[10px] gold-master font-black w-24">HORA</th>
-                                            {CANCHAS.map(c => (
-                                                <th key={c} className="p-4 border-r border-slate-800 last:border-0 text-center w-64 min-w-[220px]">
-                                                    <div className="text-white text-sm font-bold">Cancha {c}</div>
-                                                    <div className="text-[9px] text-slate-500 uppercase font-black">{c === 5 ? 'Arcilla / Tarde' : 'Arcilla'}</div>
-                                                </th>
+                        
+                        {/* PESTAÑA: PROGRAMACIÓN */}
+                        {view === 'prog' && (
+                            <div className="flex flex-col h-full gap-4">
+                                <div className="flex justify-between items-end border-b border-slate-800 pb-4">
+                                    <div className="flex flex-col gap-2">
+                                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Selector de Jornada</p>
+                                        <div className="flex gap-2">
+                                            {DIAS_TORNEO.map(dia => (
+                                                <button key={dia} onClick={() => setActiveDay(dia)} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${activeDay === dia ? 'bg-emerald-600 border-emerald-500 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'border-slate-700 text-slate-400 hover:bg-slate-800'}`}>
+                                                    {dia}
+                                                </button>
                                             ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {HORAS.map(h => (
-                                            <tr key={h} className="border-b border-slate-800 last:border-0">
-                                                <td className="p-4 font-mono text-sky-400 text-lg font-black border-r border-slate-800 bg-slate-900/20">{h}</td>
-                                                {CANCHAS.map(c => {
-                                                    const p = partidos[`${c}_${h}`];
-                                                    return (
-                                                        <td key={c} className="p-2 border-r border-slate-800 last:border-0 h-32">
-                                                            {p ? (
-                                                                <div className="match-card p-3 rounded-xl h-full flex flex-col justify-between shadow-lg relative group">
-                                                                    <div>
-                                                                        <p className="text-[8px] gold-master font-black mb-1 truncate uppercase tracking-tighter">{p.cat} —</p>
-                                                                        <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j1}</p>
-                                                                        <p className="text-[9px] text-slate-500 my-0.5 font-bold italic">vs</p>
-                                                                        <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j2}</p>
-                                                                    </div>
-                                                                    <div className="flex gap-2 mt-2">
-                                                                        <button className="flex-1 bg-sky-500 text-slate-900 text-[9px] font-black py-1.5 rounded shadow-md uppercase hover:bg-sky-400 transition-colors">🏆 Informar</button>
-                                                                        <button onClick={() => clearCancha(c, h)} className="px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded text-xs font-bold transition-colors">×</button>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <button onClick={() => handleAssign(c, h)} className="h-full w-full border border-dashed border-slate-700/50 rounded-xl flex items-center justify-center opacity-40 hover:opacity-100 hover:border-yellow-500 hover:text-yellow-500 transition-all cursor-pointer">
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest">+ Programar</span>
-                                                                </button>
-                                                            )}
-                                                        </td>
-                                                    );
-                                                })}
+                                        </div>
+                                    </div>
+                                    <div className="text-emerald-400 text-[10px] font-bold border border-emerald-500/30 px-3 py-1 rounded-full bg-emerald-500/10">● DASHBOARD ACTIVO</div>
+                                </div>
+
+                                <div className="overflow-x-auto rounded-xl border border-slate-800 shadow-2xl">
+                                    <table className="w-full border-collapse">
+                                        <thead className="bg-slate-900/90">
+                                            <tr>
+                                                <th className="p-4 text-left border-r border-slate-800 text-[10px] gold-master font-black w-24">HORA</th>
+                                                {CANCHAS.map(c => (
+                                                    <th key={c} className="p-4 border-r border-slate-800 last:border-0 text-center w-64 min-w-[220px]">
+                                                        <div className="text-white text-sm font-bold">Cancha {c}</div>
+                                                    </th>
+                                                ))}
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {HORAS.map(h => (
+                                                <tr key={h} className="border-b border-slate-800 last:border-0">
+                                                    <td className="p-4 font-mono text-sky-400 text-lg font-black border-r border-slate-800 bg-slate-900/20">{h}</td>
+                                                    {CANCHAS.map(c => {
+                                                        const p = partidos[`${activeDay}_${c}_${h}`];
+                                                        return (
+                                                            <td key={c} className="p-2 border-r border-slate-800 last:border-0 h-32">
+                                                                {p ? (
+                                                                    <div className="match-card p-3 rounded-xl h-full flex flex-col justify-between shadow-lg relative group">
+                                                                        <div>
+                                                                            <p className="text-[8px] gold-master font-black mb-1 truncate uppercase tracking-tighter">{CATEGORIAS_ICONS[p.cat]} {p.cat}</p>
+                                                                            <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j1}</p>
+                                                                            <p className="text-[9px] text-slate-500 my-0.5 font-bold italic">vs</p>
+                                                                            <p className="text-[11px] font-extrabold text-white leading-tight uppercase truncate">{p.j2}</p>
+                                                                        </div>
+                                                                        <div className="flex gap-2 mt-2">
+                                                                            <button className="flex-1 bg-sky-500 text-slate-900 text-[9px] font-black py-1.5 rounded shadow-md uppercase">🏆 Informar</button>
+                                                                            <button onClick={() => clearCancha(activeDay, c, h)} className="px-3 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded text-xs font-bold">×</button>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button onClick={() => handleAssign(activeDay, c, h)} className="h-full w-full border border-dashed border-slate-700/50 rounded-xl flex items-center justify-center opacity-40 hover:opacity-100 hover:border-yellow-500 hover:text-yellow-500 transition-all cursor-pointer">
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest">+ Programar</span>
+                                                                    </button>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="flex flex-col gap-6">
-                                <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar">
+                        )}
+
+                        {/* PESTAÑA: LLAVES */}
+                        {view === 'llaves' && (
+                            <div className="flex flex-col gap-6 h-full">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                     {CATEGORIAS.map(cat => (
-                                        <button key={cat} onClick={() => setSelectedCat(cat)} className={`px-4 py-2 rounded-full text-[10px] font-black uppercase whitespace-nowrap transition-all border ${selectedCat === cat ? 'bg-yellow-500 border-yellow-500 text-slate-900' : 'border-slate-700 text-slate-400'}`}>
-                                            {cat}
+                                        <button key={cat} onClick={() => setSelectedCat(cat)} className={`p-3 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-2 border ${selectedCat === cat ? 'bg-yellow-500 border-yellow-500 text-slate-900 shadow-lg scale-[1.02]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}>
+                                            <span className="text-xl">{CATEGORIAS_ICONS[cat]}</span>
+                                            <span className="text-left leading-tight">{cat}</span>
                                         </button>
                                     ))}
                                 </div>
                                 
-                                {/* CONTENEDOR DEL BRACKET RENDERER */}
                                 <div className="p-8 overflow-x-auto bg-slate-900/50 border border-slate-800 rounded-3xl shadow-2xl relative min-h-[500px]">
                                     <div className="flex gap-16 min-w-max">
-                                        {LLAVES_DATA[selectedCat]?.map((round, rIndex, roundsArray) => (
+                                        {getRoundsForCategory(selectedCat).map((round, rIndex, roundsArray) => (
                                             <div key={rIndex} className="flex flex-col justify-around relative">
-                                                {/* Título de la Ronda */}
                                                 <div className="absolute -top-6 left-0 w-full text-center text-[10px] gold-master font-black uppercase tracking-[0.2em]">
-                                                    {rIndex === roundsArray.length - 1 ? 'Final' : rIndex === roundsArray.length - 2 ? 'Semifinal' : `Ronda ${rIndex + 1}`}
+                                                    {rIndex === roundsArray.length - 1 ? 'Final' : rIndex === 0 && roundsArray.length > 2 ? 'Cuartos' : 'Semifinal'}
                                                 </div>
-                                                
-                                                {/* Nodos de la Ronda */}
                                                 {round.map((match, mIndex) => (
-                                                    <BracketNode 
-                                                        key={match.id} 
-                                                        match={match} 
-                                                        roundIndex={rIndex} 
-                                                        matchIndex={mIndex} 
-                                                        totalRounds={roundsArray.length} 
-                                                    />
+                                                    <BracketNode key={match.id} match={match} roundIndex={rIndex} matchIndex={mIndex} totalRounds={roundsArray.length} />
                                                 ))}
                                             </div>
                                         ))}
@@ -244,11 +256,36 @@
                                 </div>
                             </div>
                         )}
+
+                        {/* PESTAÑA: JUGADORES */}
+                        {view === 'jugadores' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                {CATEGORIAS.map(cat => (
+                                    <div key={cat} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                                        <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mb-3">
+                                            <span className="text-2xl">{CATEGORIAS_ICONS[cat]}</span>
+                                            <h3 className="font-black text-white uppercase text-sm">{cat}</h3>
+                                        </div>
+                                        <div className="flex flex-col gap-1 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                                            {JUGADORES_BASE[cat]?.map((jugador, i) => (
+                                                <div key={i} className="flex items-center gap-2 py-1.5 border-b border-slate-800/50 last:border-0">
+                                                    <span className="text-[10px] font-mono text-slate-500 w-4">{i+1}.</span>
+                                                    <span className="text-xs font-bold text-slate-300 uppercase">{jugador}</span>
+                                                </div>
+                                            ))}
+                                            {(!JUGADORES_BASE[cat] || JUGADORES_BASE[cat].length === 0) && (
+                                                <div className="text-xs text-slate-500 italic py-2">Sin inscritos confirmados...</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 justify-between text-[10px] text-slate-500 font-bold tracking-widest">
-                        <span>SISTEMA TABLERO DE MANDO Y CONTROL V1.4</span>
-                        <span className="gold-master italic uppercase">Desarrollado para CNCS Salinas — Almirante al Mando</span>
+                        <span>SISTEMA TABLERO DE MANDO V1.5</span>
+                        <span className="gold-master italic uppercase">Almirante al Mando</span>
                     </div>
                 </div>
             );
