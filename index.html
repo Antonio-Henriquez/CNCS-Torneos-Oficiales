@@ -3,120 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CNCS - Centro de Control de Torneos</title>
+    <title>CNCS - TORNEO GLORIAS NAVALES 2026</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f1f5f9; overflow: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        @media print { .print-hide { display: none !important; } .print-bg { background: white !important; color: black !important; } }
+        body { font-family: 'Inter', sans-serif; background-color: #0F172A; color: #F1F5F9; overflow: hidden; }
+        .gold-master { color: #EAB308; }
+        .bg-navy { background-color: #0F172A; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
-        // --- DATA INJECTED FROM SRC/DATA.TS ---
-        const DIAS_FULL = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const HORAS_BASE = ['09:00', '11:00', '13:00', '15:00', '17:00'];
-        const CAT_COLORS = ['#818CF8', '#34D399', '#A78BFA', '#FBBF24', '#60A5FA'];
-        
-        // --- LOGIC FROM SRC/LIB/BRACKET.TS ---
-        // (Se incluye la lógica simplificada de generación para el despliegue web)
-        function getSeedOrder(size) {
-            if (size === 2) return [1, 2];
-            const prev = getSeedOrder(size / 2);
-            const res = [];
-            for (let i = 0; i < prev.length; i++) {
-                const p = prev[i];
-                if (i % 2 === 0) { res.push(p); res.push(size + 1 - p); }
-                else { res.push(size + 1 - p); res.push(p); }
-            }
-            return res;
-        }
+        const CANCHAS = [1, 2, 3, 4, 5];
+        const NOMBRE_TORNEO = "GLORIAS NAVALES 2026"; // Automatización del nombre
 
-        // --- COMPONENTES PRINCIPALES ---
         function App() {
             const [view, setView] = React.useState('prog');
-            const [fechaActiva] = React.useState({ y: 2026, m: 4, d: 2 });
             const [partidos, setPartidos] = React.useState(() => {
-                const saved = localStorage.getItem('cncs_partidos');
+                const saved = localStorage.getItem('cncs_partidos_v1');
                 return saved ? JSON.parse(saved) : {};
             });
 
-            const dayStr = `${DIAS_FULL[new Date(2026, 4, 2).getDay()]} 02 DE MAYO 2026`;
+            const handleAssign = (cancha, hora) => {
+                const cat = prompt("Categoría (ej: Singles Honor):", "Singles Honor");
+                const j1 = prompt("Nombre del Desafiador:");
+                const j2 = prompt("Nombre del Desafiado:");
+                if (j1 && j2) {
+                    const next = { ...partidos, [`${cancha}_${hora}`]: { j1, j2, cat: cat || "General" } };
+                    setPartidos(next);
+                    localStorage.setItem('cncs_partidos_v1', JSON.stringify(next));
+                }
+            };
 
             return (
-                <div className="h-screen w-full flex flex-col bg-slate-950">
-                    {/* BARRA SUPERIOR */}
-                    <div className="flex items-center px-6 h-14 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
-                        <div className="flex-1 font-bold text-sm tracking-tighter text-slate-100 uppercase">
-                            CNCS CONTROL / RAMA DE TENIS - CLUB DE CAMPO LAS SALINAS
+                <div className="h-screen w-full flex flex-col bg-navy">
+                    {/* BARRA DE MANDO AUTOMATIZADA */}
+                    <div className="flex items-center px-6 h-16 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
+                        <div className="flex items-center gap-3 flex-1">
+                            <div className="w-9 h-9 rounded-full bg-yellow-500 flex items-center justify-center text-slate-900 shadow-[0_0_15px_rgba(234,179,8,0.4)]">
+                                <span className="text-xl">🏆</span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] gold-master font-black tracking-[0.2em] leading-none mb-1">CNCS - CLUB DE CAMPO LAS SALINAS</span>
+                                <h1 className="font-extrabold text-lg text-white uppercase leading-none italic">
+                                    TORNEO <span className="gold-master">{NOMBRE_TORNEO}</span>
+                                </h1>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => setView('prog')} className={`px-4 py-1.5 rounded text-[11px] font-bold ${view === 'prog' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>PROGRAMACIÓN</button>
-                            <button onClick={() => setView('llaves')} className={`px-4 py-1.5 rounded text-[11px] font-bold ${view === 'llaves' ? 'bg-sky-600 text-white' : 'text-slate-400'}`}>LLAVES</button>
+                        <div className="flex gap-3">
+                            <button onClick={() => setView('prog')} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${view === 'prog' ? 'bg-yellow-500 text-slate-950' : 'text-slate-400 hover:bg-slate-800 border border-slate-700'}`}>PROGRAMACIÓN</button>
+                            <button onClick={() => setView('llaves')} className={`px-5 py-2 rounded-lg text-xs font-black transition-all ${view === 'llaves' ? 'bg-yellow-500 text-slate-950' : 'text-slate-400 hover:bg-slate-800 border border-slate-700'}`}>LLAVES</button>
                         </div>
                     </div>
 
-                    {/* CONTENIDO PRINCIPAL */}
-                    <div className="flex-1 overflow-hidden p-6">
-                        {view === 'prog' ? (
-                            <div className="h-full flex flex-col gap-4">
-                                <div className="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800">
-                                    <h2 className="text-xl font-light text-white uppercase tracking-tight">{dayStr}</h2>
-                                    <div className="flex gap-2">
-                                        <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono border border-emerald-500/20">OPERATIVO 95%</div>
-                                    </div>
-                                </div>
-                                <div className="flex-1 bg-slate-900/50 border border-slate-800 rounded-2xl overflow-auto p-4">
-                                    <table className="w-full border-collapse">
-                                        <thead>
-                                            <tr className="text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-800">
-                                                <th className="p-4 text-left">Hora</th>
-                                                {[1,2,3,4,5].map(c => <th key={c} className="p-4">Cancha {c}</th>)}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {HORAS_BASE.map(h => (
-                                                <tr key={h} className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                                                    <td className="p-4 font-mono text-sky-400 text-sm font-bold">{h}</td>
-                                                    {[1,2,3,4,5].map(c => (
-                                                        <td key={c} className="p-2">
-                                                            <div className="h-20 border border-dashed border-slate-800 rounded-lg flex items-center justify-center text-[10px] text-slate-600 uppercase">
-                                                                Libre
+                    <div className="flex-1 p-8 overflow-auto">
+                        <div className="mb-6 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-3xl font-black text-white italic uppercase">Sábado 02 de Mayo</h2>
+                                <p className="text-slate-500 text-xs font-mono mt-1 uppercase tracking-widest">Rama de Tenis - Control de Canchas</p>
+                            </div>
+                            <div className="bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-[10px] font-black border border-emerald-500/20 shadow-sm uppercase tracking-tighter">
+                                ● Dashboard Oficial en Línea
+                            </div>
+                        </div>
+
+                        <div className="glass border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+                            <table className="w-full border-collapse">
+                                <thead className="bg-slate-900/80">
+                                    <tr>
+                                        <th className="p-5 text-left border-r border-slate-800 text-[11px] gold-master font-black uppercase tracking-widest w-28">HORA</th>
+                                        {CANCHAS.map(c => <th key={c} className="p-5 border-r border-slate-800 last:border-0 text-[11px] text-slate-400 font-black uppercase">CANCHA {c}</th>)}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {HORAS_BASE.map(h => (
+                                        <tr key={h} className="border-b border-slate-800 last:border-0 group hover:bg-slate-800/30 transition-colors">
+                                            <td className="p-6 font-mono text-yellow-500 text-xl font-black border-r border-slate-800 bg-slate-900/20">{h}</td>
+                                            {CANCHAS.map(c => {
+                                                const p = partidos[`${c}_${h}`];
+                                                return (
+                                                    <td key={c} className="p-3 border-r border-slate-800 last:border-0 relative">
+                                                        {p ? (
+                                                            <div className="bg-slate-800/90 p-4 rounded-2xl border-l-4 border-yellow-500 shadow-xl transition-transform hover:scale-[1.02]">
+                                                                <p className="text-[9px] gold-master font-black uppercase mb-2 tracking-widest">{p.cat}</p>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <p className="text-[13px] font-bold text-white truncate uppercase">{p.j1}</p>
+                                                                    <p className="text-[10px] text-slate-500 font-black italic">vs</p>
+                                                                    <p className="text-[13px] font-bold text-white truncate uppercase">{p.j2}</p>
+                                                                </div>
                                                             </div>
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-500 italic">
-                                <i className="lucide-shield-check w-12 h-12 mb-4 opacity-20"></i>
-                                Cargando Motores de Llaves... Seleccione una categoría para visualizar.
-                            </div>
-                        )}
+                                                        ) : (
+                                                            <button onClick={() => handleAssign(c, h)} className="w-full h-24 border-2 border-dashed border-slate-800 rounded-2xl flex items-center justify-center text-[10px] text-slate-600 font-bold hover:border-yellow-500/40 hover:text-yellow-400 transition-all uppercase tracking-[0.2em]">
+                                                                + Programar
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    {/* PIE DE PÁGINA */}
-                    <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-6 justify-between text-[10px] text-slate-500 font-mono">
-                        <div>SISTEMA DE MANDO Y CONTROL V1.0</div>
-                        <div className="text-sky-500 uppercase tracking-widest">Almirante al mando</div>
+                    <div className="h-10 bg-slate-900 border-t border-slate-800 flex items-center px-8 justify-between text-[10px] text-slate-500 font-bold tracking-widest">
+                        <span>SISTEMA TABLERO DE MANDO Y CONTROL V1.1</span>
+                        <span className="gold-master italic uppercase">Desarrollado para CNCS Salinas</span>
                     </div>
                 </div>
             );
         }
-
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
